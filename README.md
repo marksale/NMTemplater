@@ -40,3 +40,8 @@ out = Templater.makeControlFiles("control5_Template.txt","Tokens2.txt","Populati
 out[0][0].status
 Templater.runModels(out[0]) 
 out[0][0].status
+
+
+once done, exit python ("quit()")
+
+you should get 48 control files, GAControl_*.mod

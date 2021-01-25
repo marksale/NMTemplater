@@ -2,7 +2,7 @@
 Python code to generate NONMEM control files from template, tokens and specification file
 There are three input files:
   control5_template.txt - this is the control file template, based loosely on the control5 example in the NONMEM installation
-  population2.txt - this is a JSON file with "genes" (in GA) for 46 models, 5 genees each. The genes correspond to the sequence of tokens in the tokens2.txt
+  population2.txt - this is a JSON file with "genes" (in GA) for 48 models, 5 genes each. The genes correspond to the sequence of tokens in the tokens2.txt
   Tokens2.txt - JSON file with token sets:
               5 token groups - ADVAN,CL~WT, V~WT, KAETA and RESERR and 2 THETAs
               ADVAN has 2 token sets with 3 tokens each

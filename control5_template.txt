@@ -1,0 +1,48 @@
+$PROB  THEOPHYLLINE   POPULATION DATA
+$INPUT      ID DOSE=AMT TIME CP=DV WT
+$DATA       THEOPP
+
+$SUBROUTINES  {ADVAN[1]}
+
+$PK
+;THETA(1)=MEAN ABSORPTION RATE CONSTANT (1/HR)
+;THETA(2)=MEAN ELIMINATION RATE CONSTANT (1/HR)
+;THETA(3)=SLOPE OF CLEARANCE VS WEIGHT RELATIONSHIP (LITERS/HR/KG)
+;SCALING PARAMETER=VOLUME/WT SINCE DOSE IS WEIGHT-ADJUSTED
+   CALLFL=1
+   KA=THETA(1) {KAETA[1]}
+   CL=THETA(3){    CL~WT[ 1]}+ETA(2  )
+   V2=THETA(2){     V~WT[1   ]}+ETA(   1) ;; test comment ;; another test 
+   K=CL/V2
+   S2=V2 *EXP( ETA( 3  )) ;;; incorrect, just for parseing test
+   {ADVAN[2]}
+$THETA  
+NUMP = 4 ;; just for testing parsing code
+ 5 FIX
+ 
+ (.008,.08,.5)   
+$OMEGA BLOCK(2)  
+6 
+.005 .0002   
+$THETA
+ 1 FIXED
+
+$OMEGA
+ 4 FIX ;; S2
+{KAETA[2]}
+$THETA
+
+  {V~WT[2]}
+  {CL~WT[2   ]}
+  {ADVAN[3]}
+$ERROR
+   Y=F{RESERR[1  ]  }
+
+
+$SIGMA  
+{RESERR[2]}
+
+$EST     MAXEVAL=450  PRINT=5
+$COV
+$TABLE          ID DOSE WT TIME
+$SCAT           (RES WRES) VS TIME BY ID

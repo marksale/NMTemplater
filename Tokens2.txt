@@ -1,0 +1,48 @@
+{
+	"ADVAN": [
+		["ADVAN1",
+		";; PK 1 compartment ",
+		";; THETA 1 compartment"
+		],
+		["ADVAN3",
+		"K12 = THETA(ADVANA)\nK21=THETA(ADVANB)",
+		"(0,0.1) ;; K12 THETA(ADVANA) 1/HR\n(0,0.1) ;;K21 THETA(ADVANB)"
+		]
+	],
+	"CL~WT": [
+		["",
+		""
+		],
+		["*EXP(CWT*THETA(CL ~WT))",
+		"(-4,0.1,4) ;; THETA(CL~WT) CL~WT, exponential"
+		],
+		["*CWT**THETA(CL~WT)",
+		"(-4,0.1,4) ;; THETA(CL ~WT) CL~WT, Power"
+		]
+	],
+
+	"V~WT": [
+		["",
+		""
+		],
+		["*EXP(CWT*THETA(V~WTA)+CWT*THETA(V~WTB))",
+		"(-4,0.1,4) ;; THETA(V~WTA) V~WT\n  (-4,0.1,4)  ;; THETA(V~WTB) other effect of WT"
+		]
+	],
+	"KAETA": [
+		[";; no eta on ka",
+		" ;; no eta on ka"
+		],
+		["*EXP(ETA(KAETA))",
+		"0.1;; ETA on KA"
+		]
+	],
+	"RESERR": [
+		["*EXP(EPS(PROP))+EPS(ADD)",
+		"0.1 ;; EPS(PROP) proportional error\n  10 ;; EPS(PROP) additive error"
+		],
+		["+EPS(ADD)",
+		"10 ;; EPS(ADD) additive error"
+		]
+	]
+}

@@ -228,30 +228,39 @@ def getFixedTHETA(Code):
     Code = ""
     for thisline in lines:
         thisline = thisline.strip()
-        ### remove blanks, options and tokens
+        ### remove blanks, options and tokens, comments
+        while thisline.find(";") !=-1:
+            thisline = thisline[0:thisline.find(";")]
+        while thisline.find("\t") !=-1:
+            thisline = thisline.replace("\t","")
         if thisline !="" and thisline!=key and thisline.find("NUMBERP")== -1 and thisline.find("NUMP")== -1 and thisline.find("{") == -1:
+             ## remove comments
+            while thisline.find(";") !=-1:
+                thisline = thisline[0:thisline.find(";")]
             ## remove fixed
             thisline = thisline.replace("FIXED","")
             thisline = thisline.replace("FIX","")
             ## check for parens, if present, replace entire contens with collapsed
+            ## for (lower,init,upper) syntax
             if thisline.find("(")!=-1:
                 ## collapse on ","s
                 thisline = thisline.replace(",","")
                 ## should be first position and last??
                 thisline = thisline.strip()
-                length = len(thisline)-1
-                thisline = thisline[1:length]
+            #    length = len(thisline)-1
+            #    thisline = thisline[1:length]
             Code = Code + thisline + '\n' 
 
-    ## replace "\n" witi ","
-    while Code.find("  ") !=-1:
-        Code = Code.replace("  "," ")
-    while Code.find(" \n") !=-1:
-        Code = Code.replace(" \n","\n")       
-    Code = Code.replace("\n"," ")
-    Code = Code.strip()
-    Code = Code.replace(" ",",")  
-    Code = Code.split(",")
+    ## replace "\n" witih ","    
+    ## get rid of any ","
+  #  while Code.find(",") !=-1:
+  #      Code = Code.replace(",","")
+     
+     
+   # while Code.find("  ") !=-1:
+   #     Code = Code.replace("  "," ")  
+   # Code = Code.strip() 
+    Code = Code.split()
 
     return len(Code),THETABlock
 
@@ -377,16 +386,18 @@ def matchTHETA(Model,tokenSets):
         for thistoken in thisTokenSet:       
             # get all tokens in $THETA block
             ## just for testing, remove comments
-            if thistoken.find(";"):
-                testtoken = thistoken[:thistoken.find(";")]
-            if THETABlock.find(thistoken) > -1 and testtoken.strip() != "": ## look for any tokens in the $THETA block
+            testtoken = thistoken
+          #  if testtoken.find(";"):
+          #      testtoken = thistoken[:thistoken.find(";")]
+            if THETABlock.find(testtoken) > -1 and testtoken.strip() != "": ## look for any tokens in the $THETA block
                 ## get
                 ## token may have init for more than one THETA, e.g., (0,1,4)\n(=1,0.1,4) or just 4 4
                 ## are there ()? if so reduce to just contents
                 ## if no (), then each value is a THETA init
+
+                ## remove any comments, if still in THETAblock, then add
                 tokenPosition = THETABlock.find(thistoken)
-                if tokenPosition > -1:
-                    tokenPositions.append(tokenPosition)
+                if tokenPosition > -1: 
                     nTHETA = 0
                     # we have identified one or more theta(s) needing an index, based on position in $THETA
                     # next need to find the THETA(?) in that same token set
@@ -406,7 +417,7 @@ def matchTHETA(Model,tokenSets):
                         ##while trimmedToken.find("THETA(",start) > -1: ## \D not decimal digit
                         ## can use upper and lower case and ~ in tokens, cannot use digits or other special characters
                         # white space should already be gone, but space it there anyway
-                        alltokens= re.findall("THETA\([ a-zA-Z~]+\)", trimmedToken)
+                        alltokens= re.findall("THETA\([ 0-9a-zA-Z~]+\)", trimmedToken)
                         for i in alltokens:
                             ## GET WHATEVER IS INSIDE {THETA()}
                             ## may be multiple THETAs  
@@ -421,9 +432,11 @@ def matchTHETA(Model,tokenSets):
                             index.replace("A","")
                             while index.find(" ") > -1:
                                 index = index.replace(" ","") 
-                            THETAIndices.append(i[start:last])  
+                            THETAIndices.append(index) #i[start:last])  
                             nTHETA = nTHETA+1
-                    numTHETAs.append(nTHETA)
+                    if nTHETA > 0:
+                        tokenPositions.append(tokenPosition)
+                        numTHETAs.append(nTHETA)
                     nTHETA = 0
                             
    
@@ -443,39 +456,28 @@ def matchTHETA(Model,tokenSets):
             nextTHETA = nextTHETA + 1
     ## remove lowest    
         tokenPositions.pop(lowestIndex)
+        THETAIndices.pop(lowestIndex)
     ## and replace tokens
     for thisset in newIndices:
-        Model.control = re.sub(thisset['token'],str(thisset['replacement']),Model.control)
+        old = "THETA(" + thisset['token'] + ")"
+        new = "THETA(" + str(thisset['replacement'])+")" 
+        Model.control = Model.control.replace(old,new)
    
 
-def matchRandom(Model,tokenSets,key):   
-    # look for token sets with ETA(/EPS( in them
-    # find the sequence of those that appear in $THETA
-    # put that sequence into THETA(A) etc.
-    # for each token set, see if any include "THETA("
-    # if they do, 
-    #      get the index(s)
-    #      get the position in the $THETA Block, must be only one token in $THETA per token set??
-    #  Once you've gotten the positions of all THETA-including tokens in the $THETA block, you can assign indexes to
-    #  the THETA(A
-    # keep list of matched pairs, put back into original, to preserve comments, etc 
-     
-    ## sort tokenPositions 
-## get positionn of any tokens in THETA Block
-## need to get current THETAblock
-## should not be "clean", keep comments etc
+
+def matchRandom(Model,tokenSets,key):  
     if key=="ETA":
         BlockKey = "$OMEGA"
         nextIndex = Model.lastFixedETA + 1
-        grepString = "ETA\([ a-zA-Z~]+\)"
+        grepString = "ETA\([ 0-9a-zA-Z~]+\)"
         searchString = "ETA("
     else:
         BlockKey = "SIGMA"
         nextIndex = Model.lastFixedEPS + 1
-        grepString = "EPS\([ a-zA-Z~]+\)"
+        grepString = "EPS\([ 0-9a-zA-Z~]+\)"
         searchString = "EPS("
     RandomBlock = getFixedRandomall(Model.control,BlockKey) # return is a tuple, only need  
- 
+     
     ## need single string to search for position of THETA token in THETA block
     newBlock = ""
     for thisline in RandomBlock:
@@ -486,26 +488,28 @@ def matchRandom(Model,tokenSets,key):
     ## and from tokens
      
     ##fixedTHETABlock = removeComments(fixedTHETABlock)
+ 
     tokenPositions = []
     Indices = [] ## for each token found in the $THETA, get any indices and write here
                       ## may be more than one index, need to parse the text found in the $THETA block 
                       ## to figure out how many indices are needed
     nRandoms = []  ## number of thetas in each token, e.g., ADVAN[2] typically has 2, for k12 and k21
-   
     for thisTokenSet in tokenSets: 
         for thistoken in thisTokenSet:       
             # get all tokens in $THETA block
             ## just for testing, remove comments
-            if thistoken.find(";"):
-                testtoken = thistoken[:thistoken.find(";")]
-            if RandomBlock.find(thistoken) > -1 and testtoken.strip() != "": ## look for any tokens in the $THETA block
+            testtoken = thistoken
+           # if testtoken.find(";"):
+           #     testtoken = thistoken[:thistoken.find(";")]
+            if RandomBlock.find(testtoken) > -1 and testtoken.strip() != "": ## look for any tokens in the $THETA block
                 ## get
                 ## token may have init for more than one THETA, e.g., (0,1,4)\n(=1,0.1,4) or just 4 4
                 ## are there ()? if so reduce to just contents
                 ## if no (), then each value is a THETA init
+
+                ## remove any comments, if still in THETAblock, then add
                 tokenPosition = RandomBlock.find(thistoken)
-                if tokenPosition > -1:
-                    tokenPositions.append(tokenPosition)
+                if tokenPosition > -1: 
                     nRandom = 0
                     # we have identified one or more theta(s) needing an index, based on position in $THETA
                     # next need to find the THETA(?) in that same token set
@@ -514,7 +518,7 @@ def matchRandom(Model,tokenSets,key):
                     # ADVAN has 3 tokens, 2 token sets
                     # CL~WT has 2 tokens, 3 token sets
                     # V~WT has 2 tokens, 2 token sets
-                    # RESERR has 2 tokens, 2 token sets
+                    # RESERR has 2 tokens, 2 token setsdir
                     
                     for thisRandtoken in thisTokenSet:
                         start = 0 
@@ -527,8 +531,8 @@ def matchRandom(Model,tokenSets,key):
                         # white space should already be gone, but space it there anyway
                         alltokens= re.findall(grepString, trimmedToken)
                         for i in alltokens:
-                            ## GET WHATEVER IS INSIDE {E??()}
-                            ## may be multiple random variable
+                            ## GET WHATEVER IS INSIDE {THETA()}
+                            ## may be multiple THETAs  
                             start = i.find(searchString)+4
                             last = i.find(")",start)
                             index = i[start:last]
@@ -540,11 +544,13 @@ def matchRandom(Model,tokenSets,key):
                             index.replace("A","")
                             while index.find(" ") > -1:
                                 index = index.replace(" ","") 
-                            Indices.append(i[start:last])  
+                            Indices.append(index) #i[start:last])  
                             nRandom = nRandom+1
-                    nRandoms.append(nRandom)
+                    if nRandom > 0:
+                        tokenPositions.append(tokenPosition)
+                        nRandoms.append(nRandom)
                     nRandom = 0
-                             
+                            
    
     # have to generate entire set of token keys before matching references 
     # generate addition THETA indices, based on the tokenpositions in the $THETA block
@@ -562,9 +568,35 @@ def matchRandom(Model,tokenSets,key):
             nextIndex = nextIndex + 1
     ## remove lowest    
         tokenPositions.pop(lowestIndex)
+        Indices.pop(lowestIndex)
     ## and replace tokens
     for thisset in newIndices:
-        Model.control = re.sub(thisset['token'],str(thisset['replacement']),Model.control)
+        old = searchString + thisset['token'] + ")"
+        new = searchString + str(thisset['replacement'])+")" 
+        Model.control = Model.control.replace(old,new)          
+   
+    # have to generate entire set of token keys before matching references 
+    # generate addition THETA indices, based on the tokenpositions in the $THETA block
+    newIndices = []
+    nTokenSets = len(tokenPositions)
+    for thisset in range(nTokenSets):
+        # for all entries in token positions, find the first, assign that token to the current index for THETA
+        lowestIndex = tokenPositions.index(min(tokenPositions))
+        nRandom = nRandoms[lowestIndex]
+        ## loop over numTHETAs, add to new indices
+        for thisindex in range(nRandom):
+            key = Indices[sum(nRandoms[0:lowestIndex])+thisindex ]
+            value = nextIndex
+            newIndices.append ({"token":key,"replacement":value})
+            nextIndex = nextIndex + 1
+    ## remove lowest    
+        tokenPositions.pop(lowestIndex)
+
+         ## and replace tokens
+    for thisset in newIndices:
+        old = searchString+"(" + thisset['token'] + ")"
+        new = searchString+"(" + str(thisset['replacement'])+")" 
+        Model.control = Model.control.replace(old,new) 
    
 
 def matchReferences(Model,tokenSets):
@@ -579,12 +611,12 @@ def runModels(Models):
         thisModel.status = "Done" 
  
      
-# HomeDirectory = "c:\GAtemplate"
-# Template= open("control5_Template.txt",'r').read()  
-# tokens = json.loads(open("Tokens2.txt",'r').read())  
-# population = json.loads(open("Population2.txt",'r').read() )  
+#HomeDirectory = "c:\GAtemplate"
+#Template= open("TwoComp_template.txt",'r').read()
+#tokens = json.loads(open("TOKENS2COMP.TXT",'r').read())
+#population = json.loads(open("POPULATION2COMP.TXT",'r').read() )  
 
-#Models, errMsgs,warnings = makeControlFiles("control5_Template.txt","Tokens2.txt","Population2.txt","c:\GAtemplate")
+Models, errMsgs,warnings = makeControlFiles("TwoComp_template.txt","TOKENS2COMP.TXT","POPULATION2COMP.TXT","c:\GAtemplate")
  
 #print(Models[0].status)
 #runModels(Models)

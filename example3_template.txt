@@ -1,0 +1,35 @@
+$PROBLEM    linear vs MM
+$INPUT       ID TIME AMT WTKG DV
+$DATA      data.csv IGNORE=@
+           
+$SUBROUTINE {ADVAN[1]}   ;; ADVAN3 vs ADVAN13
+{ADVAN[2]}             ;;  empty vs $MODEL
+$PK       
+;; thetas out of sequence
+  TVCL = THETA(1)
+  CL = TVCL*EXP(ETA(1))
+  TVV1=THETA(2) ;; V2~WT here
+  V1=TVV1*EXP(ETA(2)) 
+  K12 = THETA(3)
+  K21 = THETA(4) 
+  {ADVAN[3]}       ; empty Vmax and Km, with or without ETA on Vmax, ETA on Km 
+  K=CL/V1  
+  ;; thetas out of sequence here\ 
+  S1 	= V1/1000 
+$ERROR        
+ IPRED =F  
+ Y=F {RESERR[1]}
+$THETA  ;; must be one THETA per line.
+ (0,200) 	; THETA(1) CL UNITS =  L/HR
+ (0,1000) 	; THETA(2) V  UNITS = L  
+ (0,0.2) 	; THETA(3) K12
+ (0,0.1)	; THETA(4) K21
+ {ADVAN[4]}  ;; Initial for Vmax,Km 
+$OMEGA BLOCK(2)  ;; must be one ETA/line
+ 0.2  		; ETA(1) CLEARANCE
+ 0.01 0.2  	; ETA(2) VOLUME
+$SIGMA  
+
+{RESERR[2]}
+{ADVAN[5]}   ;; $DES FOR MM
+$EST METHOD=COND INTER MAX = 9999

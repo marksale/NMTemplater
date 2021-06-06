@@ -1,0 +1,76 @@
+{         
+	"ADVAN": [
+		["ADVAN2 ;; advan2",
+		";; PK 1 compartment ",
+		";; THETA 1 compartment"
+		],
+		["ADVAN4 ;; advan4",
+		"K23=THETA(ADVANA){K23~WT[1]}\n  K32=THETA(ADVANB){K23~WT[1]}",
+		"(0,0.1) \t; K23 THETA(ADVANA) 1/HR\n (0,0.1) \t; K32 THETA(ADVANB)\n{K23~WT[2]} "
+		]
+	],
+	"K23~WT": [
+		["",
+		""
+		],
+		["*CWTKG**THETA(K23~WT)",
+		" (0,10) \t; THETA(K23~WT) K23~WT"
+		]
+	],
+       "KAETA": [
+                ["",
+		";; no eta on ka"
+		],
+		["*EXP(ETA(KAETA)) ;; comment test",
+		"$OMEGA ;; 2nd??OMEGA block \n0.1\t\t; ETA(KAETA) ETA ON KA"
+		]
+                ],   
+       "V2~WT": [
+                [";; no relationship",
+		";; no relationshp between V2 and weight"
+		],
+		["*CWTKG**THETA(V2~WT)",
+		"(-4,1,4) \t; THETA(V2~WT) POWER volume ~WT "
+		],
+		["*EXP(THETA(V2~WT))",
+		"(-4,1,4) \t; THETA(V2~WT) EXPONENTIAL volume ~WT "
+		]
+                ],
+       "CL~WT": [
+                ["",
+		";; no relationshp between cl and weight"
+		],
+		["*CWTKG**THETA(CL~WT)",
+		"(-4,1,4) \t; THETA(CL~WT) POWER clearance~WT "
+		],
+		["*EXP(THETA(CL~WT))",
+		"(-4,1,4) \t; THETA(CL~WT) EXPONENTIAL clearance~WT "
+		]
+	        ], 
+        "ETALAG": [
+                ["",
+		 ""
+		],
+		["*EXP(ETA(ETALAG))",
+		"$OMEGA ;; 3rd??OMEGA block \n0.1 \t\t;; ETA(ETALAG) ETA ON ALAG1"
+		]
+	         ],  
+        "LAG": [
+                ["ALAG1=THETA(ALAG){ETALAG[1]}",
+		"(0,0.1) \t; ALAG1 THETA(ALAG) ",
+                "\n {ETALAG[2]}"
+		],
+		["ALAG1=0; NO LAG",
+		";; NO LAG",
+                ";; NO ETA ON LAG"
+                ]
+	         ],  
+	"RESERR": [
+		["*EXP(EPS(RESERRA))+EPS(RESERRB)",
+		"0.1 \t; EPS(RESERRA) proportional error\n  10 \t; EPS(RESERRB) additive error"
+		],
+		["+EPS(RESERRA)",
+		"10 \t; EPS(RESERRA) additive error"
+		]
+	] 
+}

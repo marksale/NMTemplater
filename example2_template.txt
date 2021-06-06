@@ -1,0 +1,51 @@
+$PROBLEM    2 compartment fitting
+$INPUT       ID TIME AMT WTKG DV {D1LAG[1]}
+$DATA      data.csv IGNORE=@
+           
+$SUBROUTINE {ADVAN[1]} 
+$PK      
+  CWTKG = WTKG/70 
+;; thetas out of sequence
+  TVV2=THETA(2){V2~WT[1]}  ;; V2~WT here
+  V2=TVV2*EXP(ETA(2)) 
+  TVCL= THETA(1) {CL~WT[1]}  
+  CL=TVCL*EXP(ETA(1)) 
+  K=CL/V2 
+  ;; thetas out of sequence here
+  {ADVAN[2]} 
+  {D1LAG[2]} ; include D1 and lag, with diag or block OMEGA
+  
+  TVKA=THETA(3) 
+  KA=TVKA  {KAETA[1]}  
+  S2 	= V2/1000 
+$ERROR        
+ IPRED =F  
+ Y=F {RESERR[1]}
+$THETA  ;; must be one THETA per line.
+ (0,200) 	; THETA(1) CL UNITS =  L/HR
+ (0,1000) 	; THETA(2) V  UNITS = L  
+ (0,2) 		; THETA(3) KA UNITS = 1/HR
+;; test for comments in blocks
+;; test for comments in blocks
+
+ {ADVAN[3]}  ;; comment
+ {V2~WT[2]}   ;;; comment ;; comment
+;; test for comments in blocks
+ {CL~WT[2]}
+ {D1LAG[3]}
+$OMEGA BLOCK(2)  ;; must be one ETA/line
+ 0.2  		; ETA(1) CLEARANCE
+;; test for comments in blocks
+
+ 0.01 0.2  	; ETA(2) VOLUME
+;; optional $OMEGA blocks
+{KAETA[2]}  
+;; test for comments in blocks
+ 
+{D1LAG[4]} 
+$SIGMA  
+;; test for comments in blocks
+
+{RESERR[2]}
+$EST METHOD=COND INTER MAX = 9999
+$COV UNCOND PRINT=E

@@ -1,0 +1,25 @@
+	{
+	"ADVAN": [
+		["ADVAN3;; LINEAR",
+			";; PK - 2 compartment, no $MODEL ",
+			";; LINEAR, NOT DEFINITION FOR VMAX/KM",
+			";; THETA - 2 compartment linear",
+			";; LINEAR, NO $DES"
+		],
+		["ADVAN13 TOL=7;; FOR MM",
+			"$MODEL\n   COMP=(CENTRAL,DEFDOSE,DEFOBS)\n  COMP=(PERI,NODOSE)",
+			" VMAX=THETA(VMAX)\n  KM=THETA(KM)",
+			"  (0,10) \t ; VMAX THETA(VMAX) \n  (0,10) \t ; KM (THETA(KM)",
+			"$DES \n  CONC = A(1)\n  DADT(1) = -K*A(1)-VMAX*CONC/(KM+CONC) \n  DADT(2) = K12*A(1)-K21*A(2)"
+		]
+	],
+
+	"RESERR": [
+		["*EXP(EPS(RESERRA))+EPS(RESERRB)",
+			"0.1 \t; EPS(RESERRA) proportional error\n  10 \t; EPS(RESERRB) additive error"
+		],
+		["+EPS(RESERRA)",
+			"10 \t; EPS(RESERRA) additive error"
+		]
+	]
+}

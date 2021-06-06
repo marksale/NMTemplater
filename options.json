@@ -1,0 +1,21 @@
+{         
+	"popSize": 100,
+	"crossOver": 0.95,
+        "mutationRate": 0.05,
+        "nicheRadius": 5,
+        "nichePenalty": 10,
+        "THETAPenalty": 10,
+        "OMEGAPenalty": 10,
+        "SIGMAPenalty": 10,
+        "covergencePenalty": 100,
+        "covariancePenalty": 100,
+        "correlationPenalty": 100,
+        "conditionNumPenalty": 100,
+        "elitism": 5,
+        "selection":"tournament",
+        "selection_size": 2,
+        "xover":"onePoint",
+         "mutate":"flipBit",
+         "useR": "False",
+         "nmfePath": "c:\\nm744\\util\\nmfe74.bat"
+}

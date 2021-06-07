@@ -8,8 +8,7 @@ import utils
 import os
 import pharmpy  
 from subprocess import DEVNULL, STDOUT, check_call, Popen
-import time
-os.chdir("e:/msale/GAtemplate")
+import time 
 class Object:
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, 
@@ -18,16 +17,17 @@ class Object:
 class Model:
     def __init__(self):
         self.modelNum = None
-        self.control = self.output = self.controlBaseTokens = None
+        self.control =  self.controlBaseTokens = None
+        #self.output = None
         #self.OFV = None
         #self.CORR = self.COV = self.success = False
         #self.eigenvalues = None
         self.code = []  # integer values for token indices
         self.status= "Not initialized"
-        self.NTHETA =self.NOMEGA = self.NSIGMA = None
-        self.THETA = self.OMEGA = self.SIGMA = None
-        self.SETHETA = self.SEOMEGA = self.SESIGMA = None
-        self.defaultTHETA = self.defaultSEOMEGA = self.defaultSESIGMA = None
+        #self.NTHETA =self.NOMEGA = self.NSIGMA = None
+        #self.THETA = self.OMEGA = self.SIGMA = None
+        #self.SETHETA = self.SEOMEGA = self.SESIGMA = None
+        #self.defaultTHETA = self.defaultSEOMEGA = self.defaultSESIGMA = None
         self.lastFixedTHETA = None  ## fixed THETA do not count toward penalty
         self.lastFixedETA =  self.lastFixedEPS =  self.homeDir =  self.template = None
         self.phenotype = None ## pheno type will be ordered dictionary, token stem:integer
@@ -36,6 +36,11 @@ class Model:
         self.THETAmatchesSequence = {} # dictionary of source (alpha) theta indices and sequence
                                        # e.g. THETA(ABC) is first in $THETA template, then THETA(DEF)
         self.THETABlock = self.nmfePath =  self.result = None
+        self.THETAPenalty  = self.OMEGAPenalty = self.SIGMAPenalty = None
+        self.convergencePenalty = self.covariancePenalty = self.correlationPenalty = self.conditionNumberPenalty = None
+        self.fitness = None
+        self.useR = None
+        self.Rcode = None 
         self.Process = None
     def runModel(self):
         filestem = 'GAControl_' + str(self.modelNum)
@@ -52,8 +57,19 @@ class Model:
         #with open(os.devnull, 'wb') as devnull:
          #   check_call(cmd, stdout=devnull, stderr=STDOUT)
         self.result = pharmpy.Model(self.controlFileName)
-        #check_call([cmd], stdout=DEVNULL, stderr=STDOUT)
-   
+        print("output = \n")
+        print(self.result.modelfit_results.evaluation_ofv)
+        print(self.result.parameters.fix) 
+        print(self.result.modelfit_results.minimization_successful)
+        print(self.result.modelfit_results.covariance_step['completed'])
+        if self.result.modelfit_results.covariance_step['completed']:
+            print(self.result.modelfit_results.correlation_matrix.T.values) 
+            print(self.result.modelfit_results.condition_number)
+        self.calcFitness()
+        print("fitness = " + str(self.fitness))
+    def calcFitness(self):
+
+        self.fitness = 9999
          
  
 def getFixedParms(Template):
@@ -161,7 +177,7 @@ def getFixedBlock(Code,key):
     return nfixed,FullBlock
 
  
-def makeControlFiles(TemplateTextFile,tokensFile,populationFile,HomeDirectory,optionsFile): 
+def makeControlFiles(TemplateTextFile,tokensFile,populationFile,optionsFile): 
     Models = []
     errMsgs = []
     warnings = []
@@ -179,13 +195,11 @@ def makeControlFiles(TemplateTextFile,tokensFile,populationFile,HomeDirectory,op
     except:
         return "Failed to parse JSON tokens in " + tokensFile
         
-    try:    
-       # options = collections.OrderedDict(json.loads(open(optionsFile,'r').read()) )
-        with open (optionsFile, "r") as opfile:
-            options = json.loads(opfile.read())
-        #print(options["nmfePath"])
-        #options = collections.OrderedDict(json.loads(open(optionsFile,'r').read()) )
-        #print(tokens)
+    try:
+        f = open(optionsFile,)
+        options = json.load(f) 
+        f.close()
+        os.chdir(options['homeDir'])
     except:
         return "Failed to parse JSON tokens in " + tokensFile
     try:    
@@ -210,8 +224,17 @@ def makeControlFiles(TemplateTextFile,tokensFile,populationFile,HomeDirectory,op
     for thisInd in range(nModels):
         thisModel =Model()
         thisModel.control = TemplateText ## need this to find tokens in $THETA, $OMEGA etc
-        thisModel.homeDir = HomeDirectory
+        thisModel.homeDir = options["homeDir"]
         thisModel.nmfePath = options["nmfePath"]
+        thisModel.THETAPenalty  = options["THETAPenalty"]
+        thisModel.OMEGAPenalty = options["OMEGAPenalty"] 
+        thisModel.SIGMAPenalty = options["SIGMAPenalty"]
+        thisModel.convergencePenalty = options["covergencePenalty"]
+        thisModel.covariancePenalty = options["covariancePenalty"]
+        thisModel.correlationPenalty = options["correlationPenalty"]
+        thisModel.conditionNumberPenalty = options["conditionNumberPenalty"]
+        thisModel.useR =  options["useR"]
+        thisModel.Rcode = None 
         thisModel.modelNum = thisInd
         thisModel.lastFixedTHETA=nFixedTHETA
         thisModel.lastFixedETA=nFixedETA
@@ -250,14 +273,14 @@ def runModels(Models):
 
  
 print("Starting example 1")
-Models, errMsgs,warnings = makeControlFiles("example1_template.txt","example1_tokens.json","example1_pop.json","c:\GAtemplate","options.json")
+Models, errMsgs,warnings = makeControlFiles("example1_template.txt","example1_tokens.json","example1_pop.json","options.json")
 runModels(Models)
 
 print("Starting example 2")
-Models, errMsgs,warnings = makeControlFiles("example2_template.txt","example2_tokens.json","example2_pop.json","c:\GAtemplate","options.json")
+Models, errMsgs,warnings = makeControlFiles("example2_template.txt","example2_tokens.json","example2_pop.json","options.json")
 runModels(Models)
 
 print("Starting example 3")
-Models, errMsgs,warnings = makeControlFiles("example3_template.txt","example3_tokens.json","example3_pop.json","c:\GAtemplate","options.json")
+Models, errMsgs,warnings = makeControlFiles("example3_template.txt","example3_tokens.json","example3_pop.json","options.json")
 runModels(Models)
  
